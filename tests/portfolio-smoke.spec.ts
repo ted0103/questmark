@@ -10,12 +10,29 @@ test.beforeEach(async ({ page }) => {
 
 test("launches a quest and reveals its evidence form", async ({ page }) => {
   const quest = page.locator("article").filter({ hasText: "Borrow a Founder’s Nerve" });
-  await quest.getByRole("button", { name: "Start this quest" }).click();
+  const start = quest.locator(".stage-action");
+  await expect(start).toHaveAccessibleName("Start this quest");
+  await start.click();
 
   const dialog = page.getByRole("dialog", { name: "Bring back the proof." });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Add one evidence photo")).toBeVisible();
   await expect(page.getByRole("button", { name: "Close" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(start).toBeFocused();
+
+  await start.click();
+  await page.getByLabel("What did you do?").fill("I asked a founder how they made their first difficult decision.");
+  await page.getByLabel("What changed in your thinking?").fill("A small specific question created a much more useful conversation.");
+  await page.getByRole("button", { name: "Complete quest" }).click();
+  const celebration = page.getByRole("dialog", { name: "Borrow a Founder’s Nerve" });
+  await expect(celebration).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(celebration).toBeHidden();
+  await expect(start).toHaveAccessibleName("Quest complete");
+  await expect(start).toBeFocused();
 });
 
 test("re-ranks quests from a recognized starting area", async ({ page }) => {

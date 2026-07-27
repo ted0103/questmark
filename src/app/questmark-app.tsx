@@ -225,6 +225,56 @@ function achievementStates(proofs: Proof[]) {
   ] as const;
 }
 
+function useModalFocus(onClose: () => void) {
+  const modalRef = useRef<HTMLElement>(null);
+  const closeHandler = useRef(onClose);
+
+  useEffect(() => {
+    closeHandler.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+    const focusable = () => [...modal.querySelectorAll<HTMLElement>(
+      "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+    )].filter((element) => !element.hasAttribute("disabled") && !element.hidden);
+    const frame = window.requestAnimationFrame(() => {
+      (modal.querySelector<HTMLElement>("[data-dialog-autofocus]") || focusable()[0] || modal).focus();
+    });
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeHandler.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const controls = focusable();
+      if (!controls.length) {
+        event.preventDefault();
+        modal?.focus();
+        return;
+      }
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    modal.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      modal.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  return modalRef;
+}
+
 export function QuestMarkApp() {
   const [tab, setTab] = useState<Tab>("quests");
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -241,6 +291,7 @@ export function QuestMarkApp() {
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [showDemoGuide, setShowDemoGuide] = useState(true);
   const hydrated = useRef(false);
+  const dialogTrigger = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -325,6 +376,7 @@ export function QuestMarkApp() {
   }
 
   function startQuest(quest: Quest, trigger: HTMLButtonElement) {
+    dialogTrigger.current = trigger;
     const bounds = trigger.getBoundingClientRect();
     setSelected({
       quest,
@@ -353,6 +405,20 @@ export function QuestMarkApp() {
       playMark();
       navigator.vibrate?.([35, 40, 55]);
     }
+  }
+
+  function restoreDialogFocus() {
+    window.requestAnimationFrame(() => dialogTrigger.current?.focus());
+  }
+
+  function closeCompletion() {
+    setSelected(null);
+    restoreDialogFocus();
+  }
+
+  function closeCelebration() {
+    setCelebration(null);
+    restoreDialogFocus();
   }
 
   async function shareProof(proof: Proof) {
@@ -426,8 +492,8 @@ export function QuestMarkApp() {
         ))}
       </nav>
 
-      {selected && <CompletionSheet quest={selected.quest} originX={selected.originX} originY={selected.originY} onClose={() => setSelected(null)} onComplete={complete} />}
-      {celebration && <Celebration proof={celebration} onClose={() => setCelebration(null)} onShare={() => shareProof(celebration)} />}
+      {selected && <CompletionSheet quest={selected.quest} originX={selected.originX} originY={selected.originY} onClose={closeCompletion} onComplete={complete} />}
+      {celebration && <Celebration proof={celebration} onClose={closeCelebration} onShare={() => shareProof(celebration)} />}
       {toast && <div className="toast" role="status"><Icon name="mark" size={17} />{toast}</div>}
     </div>
   );
@@ -461,6 +527,8 @@ function QuestsView({
   onSelect: (quest: Quest, trigger: HTMLButtonElement) => void;
 }) {
   const recommendations = recommendQuests(quests, origin);
+  const [primaryRecommendation, ...secondaryRecommendations] = recommendations;
+  const primaryComplete = completedIds.has(primaryRecommendation.quest.id);
   return (
     <div className="page-wrap quest-page">
       <section className="quest-heading">
@@ -496,24 +564,54 @@ function QuestsView({
       </label>
       <p className="location-status" role="status"><Icon name="shield" size={15} />{locationStatus}</p>
 
-      <section className="quest-grid" aria-label="Today’s quests">
-        {recommendations.map(({ quest, distanceKm, travel }) => {
+      <section className="spatial-stage" aria-label="Today’s quests">
+        <div className="skill-world" aria-hidden="true">
+          <span className="world-glow" />
+          <span className="world-ring ring-one" />
+          <span className="world-ring ring-two" />
+          <span className="world-ring ring-three" />
+          <span className="world-ring ring-four" />
+          <span className="world-core"><Icon name="spark" size={24} /></span>
+          <span className="world-particle particle-one" />
+          <span className="world-particle particle-two" />
+          <span className="world-particle particle-three" />
+        </div>
+        <div className="floating-skill skill-communication"><span><Icon name="chat" size={16} /></span><p><small>SKILL SIGNAL</small><strong>Communication</strong></p></div>
+        <div className="floating-skill skill-courage"><span><Icon name="spark" size={16} /></span><p><small>SKILL SIGNAL</small><strong>Courage</strong></p></div>
+        <div className="floating-skill skill-observation"><span><Icon name="eye" size={16} /></span><p><small>SKILL SIGNAL</small><strong>Observation</strong></p></div>
+        <div className="stage-level"><span>{level.level}</span><p><strong>Level {level.level}</strong><small>{level.needed - level.remaining} XP to level {level.level + 1}</small></p></div>
+        <article className="stage-mission">
+          <div className="stage-mission-top"><span>Today’s match</span><b>+{primaryRecommendation.quest.xp} XP</b></div>
+          <h2>{primaryRecommendation.quest.title}</h2>
+          <p>{primaryRecommendation.quest.prompt}</p>
+          <div className="stage-meta">
+            <span><Icon name="pin" size={14} />{primaryRecommendation.quest.place}</span>
+            <span><Icon name="clock" size={14} />{primaryRecommendation.travel}, {primaryRecommendation.distanceKm.toFixed(1)} km</span>
+          </div>
+          <div className="stage-skills">{primaryRecommendation.quest.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
+          <button
+            className={`stage-action ${primaryComplete ? "complete" : ""}`}
+            onClick={(event) => !primaryComplete && onSelect(primaryRecommendation.quest, event.currentTarget)}
+            aria-disabled={primaryComplete}
+          >
+            {primaryComplete ? <><Icon name="mark" size={17} /> Quest complete</> : <>Start this quest <Icon name="arrow" size={17} /></>}
+          </button>
+        </article>
+      </section>
+
+      <div className="nearby-heading"><div><p className="eyebrow">Also nearby</p><h2>Two more ways to leave your comfort zone.</h2></div><span>{secondaryRecommendations.length} missions</span></div>
+      <section className="quest-grid" aria-label="More quests nearby">
+        {secondaryRecommendations.map(({ quest, distanceKm, travel }) => {
           const complete = completedIds.has(quest.id);
-          const featured = quest.id === 2;
           return (
-            <article className={`quest-card difficulty-${quest.difficulty.toLowerCase()} ${featured ? "featured-quest" : "side-quest"}`} key={quest.id}>
-              {featured && (
-                <div className="quest-photo" aria-hidden="true">
-                  <Image src="/quest-evidence-cafe.webp" alt="" fill priority sizes="(max-width: 900px) 100vw, 66vw" />
-                </div>
-              )}
+            <article className={`quest-card difficulty-${quest.difficulty.toLowerCase()} side-quest`} key={quest.id}>
               <div className="quest-card-content">
                 <div className="quest-card-top">
-                  <span className="difficulty">{featured ? "Featured mission" : quest.difficulty}</span>
+                  <span className="difficulty">{quest.difficulty}</span>
                   <span className="xp">+{quest.xp} XP</span>
                 </div>
                 <div className="quest-card-copy">
-                  <p className="mission-kicker"><Target size={16} weight="duotone" /> Your mission</p>
+                  <p className="mission-kicker"><Target size={16} weight="duotone" /> Nearby mission</p>
                   <h2>{quest.title}</h2>
                   <p>{quest.prompt}</p>
                 </div>
@@ -533,7 +631,7 @@ function QuestsView({
                   </div>
                 </details>
                 <div className="skill-row">{quest.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
-                <button className={`quest-action ${complete ? "complete" : ""}`} onClick={(event) => !complete && onSelect(quest, event.currentTarget)} disabled={complete}>
+                <button className={`quest-action ${complete ? "complete" : ""}`} onClick={(event) => !complete && onSelect(quest, event.currentTarget)} aria-disabled={complete}>
                   {complete ? <><Icon name="mark" size={17} /> Quest complete</> : <>Start this quest <Icon name="arrow" size={17} /></>}
                 </button>
               </div>
@@ -551,6 +649,7 @@ function CompletionSheet({ quest, originX, originY, onClose, onComplete }: { que
   const [learned, setLearned] = useState("");
   const [image, setImage] = useState<string>();
   const [evidenceError, setEvidenceError] = useState("");
+  const modalRef = useModalFocus(onClose);
 
   function pickImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -586,11 +685,11 @@ function CompletionSheet({ quest, originX, originY, onClose, onComplete }: { que
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <span className="quest-launch-ripple" aria-hidden="true" />
-      <section className="completion-sheet" role="dialog" aria-modal="true" aria-labelledby="complete-title" style={{ "--origin-x": `${originX}%`, "--origin-y": `${originY}%` } as React.CSSProperties}>
-        <button className="sheet-close" onClick={onClose} aria-label="Close" autoFocus><Icon name="close" /></button>
+      <section ref={modalRef} className="completion-sheet" role="dialog" aria-modal="true" aria-labelledby="complete-title" aria-describedby="complete-intro" tabIndex={-1} style={{ "--origin-x": `${originX}%`, "--origin-y": `${originY}%` } as React.CSSProperties}>
+        <button className="sheet-close" onClick={onClose} aria-label="Close" data-dialog-autofocus><Icon name="close" /></button>
         <p className="eyebrow">{quest.difficulty} quest, +{quest.xp} XP</p>
         <h2 id="complete-title">Bring back the proof.</h2>
-        <p className="sheet-intro"><strong>{quest.title}:</strong> {quest.prompt}</p>
+        <p className="sheet-intro" id="complete-intro"><strong>{quest.title}:</strong> {quest.prompt}</p>
         <form onSubmit={submit}>
           <label className={`evidence-drop ${image ? "has-image" : ""}`}>
             {image ? <Image src={image} alt="Selected evidence preview" fill unoptimized /> : <><Icon name="camera" size={28} /><strong>Add one evidence photo</strong><span>JPEG, PNG or WebP, 5 MB max</span></>}
@@ -614,10 +713,11 @@ function CompletionSheet({ quest, originX, originY, onClose, onComplete }: { que
 }
 
 function Celebration({ proof, onClose, onShare }: { proof: Proof; onClose: () => void; onShare: () => void }) {
+  const modalRef = useModalFocus(onClose);
   return (
-    <div className="celebration-backdrop">
-      <section className="celebration" role="dialog" aria-modal="true" aria-labelledby="proof-title">
-        <button className="sheet-close inverse" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
+    <div className="celebration-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section ref={modalRef} className="celebration" role="dialog" aria-modal="true" aria-labelledby="proof-title" aria-describedby="proof-summary" tabIndex={-1}>
+        <button className="sheet-close inverse" onClick={onClose} aria-label="Close" data-dialog-autofocus><Icon name="close" /></button>
         <div className="proof-photo">
           <Image src={proof.image || "/quest-evidence-cafe.webp"} alt="Quest evidence" fill unoptimized={Boolean(proof.image)} />
           <div className="photo-shade" />
@@ -626,7 +726,7 @@ function Celebration({ proof, onClose, onShare }: { proof: Proof; onClose: () =>
         <div className="proof-paper">
           <p className="eyebrow">Proof card, {proof.id}</p>
           <h2 id="proof-title">{proof.quest.title}</h2>
-          <p>{proof.did}</p>
+          <p id="proof-summary">{proof.did}</p>
           <blockquote>“{proof.learned}”</blockquote>
           <div className="proof-skills">{proof.quest.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
           <div className="xp-seal"><strong>+{proof.quest.xp}</strong><span>XP</span></div>

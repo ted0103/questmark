@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 
 const output = fileURLToPath(new URL("../docs/", import.meta.url));
 const videoOutput = await mkdtemp(join(tmpdir(), "questmark-video-"));
+const targetUrl = process.env.CAPTURE_URL ?? "http://127.0.0.1:3000";
 await mkdir(output, { recursive: true });
 
 const browser = await chromium.launch();
@@ -18,7 +19,7 @@ await page.addInitScript(() => {
   localStorage.removeItem("questmark-state");
   localStorage.removeItem("questmark-guide-dismissed");
 });
-await page.goto("http://127.0.0.1:3000");
+await page.goto(targetUrl);
 await page.waitForTimeout(700);
 await page.screenshot({ path: join(output, "questmark-quests.png"), fullPage: true });
 
@@ -41,7 +42,7 @@ await rm(videoOutput, { recursive: true, force: true });
 
 const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
 await mobile.addInitScript(() => localStorage.clear());
-await mobile.goto("http://127.0.0.1:3000");
+await mobile.goto(targetUrl);
 await mobile.waitForTimeout(500);
 await mobile.screenshot({ path: join(output, "questmark-mobile.png"), fullPage: true });
 await mobile.close();

@@ -45,13 +45,24 @@ npm run dev
 
 Open `http://localhost:3000`. Without environment variables, QuestMark runs as a persistent local demo using browser storage.
 
+## Canonical source and state
+
+- Product shell and interaction flow: `src/app/questmark-app.tsx`
+- Design tokens, component styling, motion, and breakpoints: `src/app/globals.css`
+- Optional backend schema: `supabase/migrations/20260727073720_questmark_core.sql`
+- Demo persistence: browser `localStorage`; the reset action clears only QuestMark demo data.
+
+Keep the local fallback working when adding backend features. Location ranking stays
+on-device, evidence remains private by default, and every modal must trap keyboard
+focus, close with Escape, and restore focus to its trigger.
+
 ## Quality checks
 
 ```bash
 npm test
 npm run lint
 npm run build
-npx playwright test
+npm run test:e2e
 ```
 
 The interaction suite covers quest launch, keyboard focus, location reranking, demo reset, and desktop/mobile Chromium.
@@ -61,3 +72,9 @@ The interaction suite covers quest launch, keyboard focus, location reranking, d
 Create a free Supabase project, add the environment values described in `.env.example`, and apply `supabase/migrations/20260727073720_questmark_core.sql`. Row-level security protects exposed tables; never expose `SUPABASE_SECRET_KEY`.
 
 Product decisions and safety boundaries are documented in [`PLAN.md`](./PLAN.md).
+
+## Deployment
+
+The connected Sites project is identified by `.openai/hosting.json`. Validate the
+exact source state with the commands above before saving and deploying a new
+version; do not create a second Sites project for this checkout.

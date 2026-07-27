@@ -23,6 +23,20 @@
   --skill-4: #e39a45;
   --skill-5: #3f9d6f;
   --skill-6: #e06d88;
+  --pearl: #f9fbff;
+  --lilac: #a99bf6;
+  --coral: #ff9f9a;
+  --mint: #76d7c6;
+  --shell-max: 1240px;
+  --content-max: 1180px;
+  --section-space: 46px;
+  --control-min: 48px;
+  --motion-fast: 140ms;
+  --motion-feedback: 180ms;
+  --focus-ring: 3px solid color-mix(in srgb, var(--clear) 75%, white);
+  --status-success: var(--green);
+  --status-error: #a6443a;
+  --spatial-shadow: 0 24px 70px rgba(49, 80, 112, 0.12);
   --menu-drop: 0 14px 34px rgba(18, 56, 77, 0.12), 0 2px 7px rgba(18, 56, 77, 0.07), inset 0 1px rgba(255, 255, 255, 0.5);
 }
 
@@ -52,11 +66,19 @@ body {
   min-height: 100%;
   color: var(--text);
   background:
-    radial-gradient(circle at 82% 0%, rgba(91, 163, 198, 0.22), transparent 31rem),
-    linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 84%, var(--mist)));
-  font-family: "Manrope Variable", sans-serif;
+    radial-gradient(circle at 76% 8%, rgba(193, 182, 255, 0.3), transparent 27rem),
+    radial-gradient(circle at 18% 34%, rgba(155, 216, 235, 0.3), transparent 28rem),
+    linear-gradient(145deg, #f7f7fc, #eaf5fa 54%, #f8eef7);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 76% 8%, rgba(120, 103, 207, 0.2), transparent 27rem),
+    radial-gradient(circle at 18% 34%, rgba(58, 132, 160, 0.18), transparent 28rem),
+    linear-gradient(145deg, #091f2d, #0c2a3b 54%, #171d32);
 }
 
 button,
@@ -74,7 +96,7 @@ button {
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--clear) 75%, white);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -94,12 +116,12 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 76px;
-  padding: 0 max(24px, calc((100vw - 1240px) / 2));
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
-  box-shadow: 0 9px 28px rgba(18, 56, 77, 0.08), inset 0 -1px rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(18px) saturate(145%);
+  height: 72px;
+  padding: 0 max(24px, calc((100vw - var(--shell-max)) / 2));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.64);
+  background: color-mix(in srgb, var(--surface-solid) 64%, transparent);
+  box-shadow: 0 12px 32px rgba(30, 63, 83, 0.06), inset 0 -1px rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(28px) saturate(175%);
 }
 
 .brand {
@@ -107,10 +129,11 @@ button:active {
   align-items: center;
   gap: 10px;
   background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   font-size: 20px;
-  font-weight: 760;
+  font-weight: 720;
   letter-spacing: -0.04em;
-  transition: transform 140ms var(--ease-out);
+  transition: transform var(--motion-fast) var(--ease-out);
 }
 
 .brand-mark {
@@ -118,10 +141,10 @@ button:active {
   width: 34px;
   height: 34px;
   place-items: center;
-  border-radius: 10px 3px 10px 3px;
+  border-radius: 50%;
   color: var(--mist);
   background: var(--deep);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 20px rgba(24, 78, 108, 0.2), inset 0 1px rgba(255, 255, 255, 0.28);
 }
 
 .topbar-actions {
@@ -159,7 +182,7 @@ button:active {
   border: 1px solid var(--line);
   border-radius: 50%;
   background: var(--surface);
-  transition: transform 140ms var(--ease-out), background 180ms ease;
+  transition: transform var(--motion-fast) var(--ease-out), background var(--motion-feedback) ease;
 }
 
 .avatar {
@@ -171,9 +194,9 @@ button:active {
 }
 
 .page-wrap {
-  width: min(1240px, calc(100% - 48px));
+  width: min(var(--content-max), calc(100% - 132px));
   margin: 0 auto;
-  padding: 64px 0 32px;
+  padding: var(--section-space) 0 32px;
 }
 
 .eyebrow {
@@ -740,11 +763,11 @@ h2 {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 48px;
+  min-height: var(--control-min);
   border-radius: 10px;
   font-size: 11px;
   font-weight: 800;
-  transition: transform 140ms var(--ease-out), background 180ms ease, color 180ms ease;
+  transition: transform var(--motion-fast) var(--ease-out), background var(--motion-feedback) ease, color var(--motion-feedback) ease;
 }
 
 .quest-action {
@@ -762,7 +785,7 @@ h2 {
   background: var(--gold);
 }
 
-.quest-action:not(:disabled):active {
+.quest-action:not(.complete):active {
   box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 12%, transparent), 0 12px 28px rgba(8, 32, 44, 0.18);
 }
 
@@ -1031,7 +1054,7 @@ h2 {
 
 .field-error {
   margin-top: -8px;
-  color: #a6443a;
+  color: var(--status-error);
   font-size: 10px;
   font-weight: 700;
 }
@@ -2410,6 +2433,766 @@ h2 {
   .relationship-panel,
   .progress-panel,
   .map-detail {
+    background: var(--surface-solid);
+    backdrop-filter: none;
+  }
+}
+
+/* QuestMark spatial components — approved refinement direction */
+
+.quest-heading h1,
+.section-heading h1,
+.profile-intro h1 {
+  font-weight: 620;
+  letter-spacing: -0.055em;
+}
+
+.quest-heading {
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.quest-heading h1 {
+  max-width: 680px;
+  font-size: clamp(44px, 5vw, 68px);
+}
+
+.quest-heading > div:first-child > p:last-child {
+  margin-top: 16px;
+  font-size: 15px;
+}
+
+.level-orbit > div {
+  width: 78px;
+  height: 78px;
+  background: conic-gradient(var(--gold) var(--progress), rgba(56, 126, 162, 0.12) 0);
+  box-shadow: 0 10px 26px rgba(40, 91, 116, 0.1);
+}
+
+.level-orbit > div::after {
+  background: color-mix(in srgb, var(--surface-solid) 82%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.demo-guide {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 14px;
+  border-color: rgba(255, 255, 255, 0.66);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--surface-solid) 66%, transparent);
+  box-shadow: 0 12px 35px rgba(45, 80, 102, 0.07), inset 0 1px rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px) saturate(150%);
+}
+
+.demo-guide > div > span {
+  color: var(--deep);
+  background: color-mix(in srgb, var(--sky) 28%, white);
+}
+
+.location-field {
+  max-width: 430px;
+  border-color: rgba(255, 255, 255, 0.74);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--surface-solid) 70%, transparent);
+  box-shadow: 0 10px 30px rgba(45, 80, 102, 0.07), inset 0 1px rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+}
+
+.location-field button {
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--sky) 22%, transparent);
+}
+
+.location-status {
+  width: max-content;
+  margin: 8px 0 22px 12px;
+}
+
+.spatial-stage {
+  position: relative;
+  min-height: 590px;
+  overflow: hidden;
+  margin: 0 0 34px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 58% 42%, rgba(255, 255, 255, 0.96), rgba(236, 246, 251, 0.74) 38%, rgba(235, 235, 252, 0.65) 74%),
+    var(--surface-solid);
+  box-shadow: var(--spatial-shadow), inset 0 1px rgba(255, 255, 255, 0.9);
+  isolation: isolate;
+}
+
+.spatial-stage::before,
+.spatial-stage::after {
+  position: absolute;
+  border: 1px solid rgba(108, 139, 169, 0.18);
+  border-radius: 50%;
+  content: "";
+}
+
+.spatial-stage::before {
+  width: 510px;
+  height: 190px;
+  left: 41%;
+  bottom: 42px;
+  transform: translateX(-50%) rotate(-5deg);
+}
+
+.spatial-stage::after {
+  width: 340px;
+  height: 120px;
+  left: 42%;
+  bottom: 76px;
+  transform: translateX(-50%) rotate(8deg);
+}
+
+.skill-world {
+  position: absolute;
+  z-index: 2;
+  width: 520px;
+  height: 520px;
+  left: 46%;
+  top: 47%;
+  transform: translate(-50%, -50%);
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+
+.world-glow {
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(137, 205, 229, 0.34) 44%, rgba(170, 151, 244, 0.1) 70%, transparent);
+  filter: blur(5px);
+}
+
+.world-ring {
+  position: absolute;
+  inset: 18%;
+  border: 42px solid color-mix(in srgb, var(--clear) 74%, white);
+  border-radius: 50%;
+  box-shadow:
+    inset 12px 10px 24px rgba(255, 255, 255, 0.72),
+    inset -13px -12px 26px rgba(47, 108, 157, 0.18),
+    0 18px 34px rgba(57, 108, 146, 0.14);
+  transform-style: preserve-3d;
+  animation: world-orbit 14s linear infinite;
+}
+
+.ring-one {
+  border-color: color-mix(in srgb, var(--clear) 64%, white);
+  transform: rotateX(64deg) rotateZ(12deg);
+}
+
+.ring-two {
+  border-color: color-mix(in srgb, var(--lilac) 66%, white);
+  transform: rotateY(68deg) rotateZ(34deg);
+  animation-direction: reverse;
+  animation-duration: 17s;
+}
+
+.ring-three {
+  border-color: color-mix(in srgb, var(--coral) 62%, white);
+  transform: rotateX(50deg) rotateY(48deg);
+  animation-duration: 19s;
+}
+
+.ring-four {
+  inset: 25%;
+  border-width: 34px;
+  border-color: color-mix(in srgb, var(--gold) 58%, white);
+  transform: rotateX(72deg) rotateY(-30deg);
+  animation-direction: reverse;
+  animation-duration: 22s;
+}
+
+.world-core {
+  display: grid;
+  position: absolute;
+  z-index: 4;
+  width: 70px;
+  height: 70px;
+  left: 50%;
+  top: 50%;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 50%;
+  color: white;
+  background: radial-gradient(circle at 32% 28%, #c8bbff, #637dca 48%, var(--deep));
+  box-shadow: 0 16px 35px rgba(65, 81, 145, 0.28), inset 0 2px 5px rgba(255, 255, 255, 0.65);
+  transform: translate(-50%, -50%);
+}
+
+.world-particle {
+  position: absolute;
+  z-index: 5;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, white, var(--sky) 36%, var(--lake));
+  box-shadow: 0 9px 20px rgba(47, 92, 129, 0.18);
+}
+
+.particle-one { left: 19%; top: 31%; }
+.particle-two { right: 16%; top: 42%; background: radial-gradient(circle at 30% 25%, white, #ffc3c0 38%, #c67d9f); }
+.particle-three { left: 39%; bottom: 13%; background: radial-gradient(circle at 30% 25%, white, #9de1d2 38%, #45a595); }
+
+@keyframes world-orbit {
+  to { rotate: 1turn; }
+}
+
+.floating-skill,
+.stage-level {
+  display: flex;
+  position: absolute;
+  z-index: 4;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 18px;
+  background: rgba(252, 253, 255, 0.72);
+  box-shadow: 0 15px 38px rgba(58, 82, 118, 0.1), inset 0 1px white;
+  backdrop-filter: blur(22px) saturate(160%);
+}
+
+.floating-skill::before {
+  position: absolute;
+  width: 90px;
+  height: 1px;
+  right: 100%;
+  background: rgba(83, 126, 157, 0.22);
+  content: "";
+}
+
+.floating-skill > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: #6758c4;
+  background: color-mix(in srgb, var(--lilac) 24%, white);
+  box-shadow: 0 8px 18px rgba(105, 89, 194, 0.15);
+}
+
+.floating-skill p,
+.stage-level p {
+  display: grid;
+  gap: 3px;
+}
+
+.floating-skill small,
+.stage-level small {
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 760;
+  letter-spacing: 0.1em;
+}
+
+.floating-skill strong,
+.stage-level strong {
+  font-size: 11px;
+}
+
+.skill-communication { right: 34px; top: 72px; }
+.skill-courage { right: 20px; top: 168px; }
+.skill-observation { right: 45px; top: 264px; }
+.skill-courage > span { color: #c55e59; background: color-mix(in srgb, var(--coral) 24%, white); }
+.skill-observation > span { color: #258e80; background: color-mix(in srgb, var(--mint) 27%, white); }
+
+.stage-level {
+  left: 30px;
+  bottom: 30px;
+}
+
+.stage-level > span {
+  display: grid;
+  width: 45px;
+  height: 45px;
+  place-items: center;
+  border-radius: 15px;
+  color: white;
+  background: linear-gradient(145deg, #78b9e3, #6e79ce);
+  box-shadow: 0 10px 22px rgba(80, 99, 171, 0.2), inset 0 1px rgba(255, 255, 255, 0.44);
+  font-size: 20px;
+  font-weight: 760;
+}
+
+.stage-mission {
+  position: absolute;
+  z-index: 6;
+  width: min(390px, 38%);
+  left: 30px;
+  top: 34px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 24px;
+  background: rgba(250, 252, 255, 0.75);
+  box-shadow: 0 24px 60px rgba(51, 75, 111, 0.13), inset 0 1px white;
+  backdrop-filter: blur(24px) saturate(165%);
+}
+
+.stage-mission-top {
+  display: flex;
+  justify-content: space-between;
+  color: var(--lake);
+  font-size: 8px;
+  font-weight: 780;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.stage-mission-top b { color: #b37913; }
+
+.stage-mission h2 {
+  margin: 18px 0 10px;
+  font-size: 30px;
+  font-weight: 640;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.stage-mission > p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stage-meta {
+  display: grid;
+  gap: 7px;
+  margin: 17px 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.stage-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stage-skills {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.stage-skills span {
+  padding: 6px 8px;
+  border-radius: 999px;
+  color: var(--lake);
+  background: rgba(91, 163, 198, 0.12);
+  font-size: 8px;
+  font-weight: 720;
+}
+
+.stage-action {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 0;
+  border-radius: 13px;
+  color: white;
+  background: var(--deep);
+  box-shadow: 0 12px 28px rgba(24, 78, 108, 0.2);
+  font-size: 10px;
+  font-weight: 730;
+  transition: transform 140ms var(--ease-out), box-shadow 180ms ease;
+}
+
+.stage-action.complete {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 12%, white);
+  box-shadow: none;
+}
+
+.nearby-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin: 0 2px 16px;
+}
+
+.nearby-heading .eyebrow { margin-bottom: 6px; }
+.nearby-heading h2 { max-width: 540px; font-size: 22px; font-weight: 620; }
+.nearby-heading > span { color: var(--muted); font-size: 10px; }
+
+.quest-grid {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: none;
+}
+
+.quest-card {
+  min-height: 310px;
+  border-color: rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface-solid) 72%, transparent);
+  box-shadow: 0 16px 45px rgba(51, 75, 105, 0.09), inset 0 1px rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(22px);
+}
+
+.quest-card::before {
+  width: 5px;
+  border-radius: 0 10px 10px 0;
+}
+
+.quest-card::after {
+  opacity: 0.5;
+}
+
+.difficulty-bold {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-solid) 72%, transparent);
+}
+
+.difficulty-bold .difficulty,
+.difficulty-bold .xp,
+.difficulty-bold .quest-card-copy > p:last-child,
+.difficulty-bold .quest-meta {
+  color: inherit;
+}
+
+.difficulty-bold .quest-card-copy > p:last-child,
+.difficulty-bold .quest-meta {
+  color: var(--muted);
+}
+
+.difficulty-bold .skill-row span {
+  color: var(--lake);
+  border-color: rgba(56, 126, 162, 0.22);
+}
+
+.difficulty-bold .quest-action {
+  color: white;
+  background: var(--deep);
+}
+
+.bottom-nav {
+  top: 50%;
+  bottom: auto;
+  left: 24px;
+  width: 62px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-color: rgba(255, 255, 255, 0.68);
+  border-radius: 22px;
+  transform: translateY(-50%);
+  background: color-mix(in srgb, var(--surface-solid) 68%, transparent);
+  box-shadow: 0 22px 55px rgba(37, 70, 91, 0.14), inset 0 1px rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px) saturate(165%);
+}
+
+.bottom-nav button {
+  width: 50px;
+  height: 50px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  border-radius: 16px;
+  color: var(--muted);
+}
+
+.bottom-nav button span { font-size: 6px; }
+
+.bottom-nav button.active {
+  color: white;
+  background: var(--deep);
+  box-shadow: 0 10px 22px rgba(24, 78, 108, 0.22);
+}
+
+.proof-card,
+.relationship-panel,
+.progress-panel,
+.settings-card,
+.review-card {
+  border-color: rgba(255, 255, 255, 0.72);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--surface-solid) 70%, transparent);
+  box-shadow: var(--spatial-shadow), inset 0 1px rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+
+.proof-card-image {
+  border-radius: 21px 21px 0 0;
+}
+
+.proof-card-image span,
+.verified-stamp {
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+}
+
+.skill-map {
+  border-color: rgba(255, 255, 255, 0.72);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.95), rgba(222, 240, 248, 0.58) 42%, rgba(232, 225, 250, 0.48)),
+    var(--surface-solid);
+  box-shadow: var(--spatial-shadow), inset 0 1px rgba(255, 255, 255, 0.88);
+}
+
+.map-center {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: radial-gradient(circle at 35% 25%, #6ba8c8, var(--deep) 52%, #102f42);
+  box-shadow: 0 0 0 12px rgba(91, 163, 198, 0.08), 0 24px 50px rgba(27, 78, 106, 0.24), inset 0 2px rgba(255, 255, 255, 0.28);
+}
+
+.skill-node {
+  border-color: rgba(255, 255, 255, 0.78);
+  border-radius: 18px;
+  background: rgba(252, 253, 255, 0.74);
+  box-shadow: 0 15px 36px rgba(45, 76, 104, 0.1), inset 0 1px white;
+  backdrop-filter: blur(18px);
+}
+
+.achievement-list > button {
+  border-color: rgba(255, 255, 255, 0.7);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--surface-solid) 74%, transparent);
+  box-shadow: 0 10px 28px rgba(46, 72, 96, 0.07), inset 0 1px white;
+}
+
+.achievement-list > button.earned:first-child {
+  border-color: rgba(226, 184, 91, 0.42);
+  background: linear-gradient(105deg, rgba(255, 250, 236, 0.9), rgba(255, 255, 255, 0.66));
+}
+
+.completion-sheet,
+.celebration {
+  border-color: rgba(255, 255, 255, 0.58);
+  border-radius: 30px;
+  background: color-mix(in srgb, var(--surface-solid) 80%, transparent);
+  box-shadow: 0 38px 100px rgba(21, 48, 67, 0.28), inset 0 1px rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(30px) saturate(165%);
+}
+
+.toast {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 16px;
+  background: rgba(18, 58, 78, 0.9);
+  box-shadow: 0 22px 50px rgba(10, 38, 53, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+:root[data-theme="dark"] .spatial-stage {
+  border-color: rgba(180, 219, 236, 0.12);
+  background:
+    radial-gradient(circle at 58% 42%, rgba(33, 72, 94, 0.94), rgba(17, 48, 66, 0.82) 42%, rgba(40, 37, 75, 0.7) 78%),
+    var(--surface-solid);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3), inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .stage-mission,
+:root[data-theme="dark"] .floating-skill,
+:root[data-theme="dark"] .stage-level {
+  border-color: rgba(188, 224, 239, 0.14);
+  background: rgba(16, 49, 67, 0.78);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .stage-action.complete {
+  background: color-mix(in srgb, var(--green) 22%, var(--surface-solid));
+}
+
+:root[data-theme="dark"] .achievement-list > button.earned:first-child {
+  background: linear-gradient(105deg, rgba(91, 73, 31, 0.56), rgba(20, 53, 72, 0.76));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .stage-action:hover,
+  .quest-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(24, 78, 108, 0.24);
+  }
+
+  .floating-skill:hover {
+    transform: translateY(-3px);
+  }
+}
+
+@media (max-width: 900px) {
+  .page-wrap {
+    width: min(100% - 36px, 720px);
+  }
+
+  .bottom-nav {
+    top: auto;
+    right: 18px;
+    bottom: 16px;
+    left: 18px;
+    width: auto;
+    flex-direction: row;
+    justify-content: space-around;
+    transform: none;
+    background: rgba(13, 55, 76, 0.92);
+  }
+
+  .bottom-nav button {
+    width: auto;
+    min-width: 58px;
+    height: 48px;
+    color: rgba(224, 240, 247, 0.62);
+  }
+
+  .bottom-nav button.active {
+    background: rgba(142, 200, 227, 0.16);
+  }
+
+  .spatial-stage {
+    min-height: 760px;
+  }
+
+  .skill-world {
+    width: 360px;
+    height: 360px;
+    left: 50%;
+    top: 40%;
+  }
+
+  .stage-mission {
+    width: calc(100% - 36px);
+    left: 18px;
+    top: auto;
+    bottom: 18px;
+  }
+
+  .floating-skill {
+    padding: 9px 10px;
+  }
+
+  .skill-communication { right: 16px; top: 55px; }
+  .skill-courage { right: 14px; top: 128px; }
+  .skill-observation { right: 24px; top: 201px; }
+  .stage-level { left: 16px; top: 55px; bottom: auto; }
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    height: 62px;
+    padding: 0 16px;
+  }
+
+  .prototype-label { display: none; }
+
+  .page-wrap {
+    width: calc(100% - 28px);
+    padding-top: 28px;
+  }
+
+  .quest-heading {
+    align-items: flex-start;
+  }
+
+  .quest-heading h1 {
+    font-size: 39px;
+  }
+
+  .level-orbit > div {
+    width: 60px;
+    height: 60px;
+  }
+
+  .level-orbit p { display: none; }
+
+  .demo-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-guide > div:nth-child(n+2) {
+    display: none;
+  }
+
+  .location-field {
+    max-width: none;
+  }
+
+  .spatial-stage {
+    min-height: 650px;
+    border-radius: 28px;
+  }
+
+  .skill-world {
+    width: 300px;
+    height: 300px;
+    top: 34%;
+  }
+
+  .world-ring {
+    border-width: 32px;
+  }
+
+  .ring-four {
+    border-width: 26px;
+  }
+
+  .floating-skill {
+    display: none;
+  }
+
+  .stage-level {
+    top: 16px;
+  }
+
+  .stage-mission {
+    padding: 18px;
+  }
+
+  .stage-mission h2 {
+    font-size: 27px;
+  }
+
+  .nearby-heading h2 {
+    max-width: 270px;
+    font-size: 18px;
+  }
+
+  .quest-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quest-card {
+    min-height: 0;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .section-heading h1 {
+    font-size: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-ring {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .topbar,
+  .demo-guide,
+  .location-field,
+  .floating-skill,
+  .stage-level,
+  .stage-mission,
+  .bottom-nav,
+  .proof-card,
+  .relationship-panel,
+  .progress-panel,
+  .settings-card,
+  .review-card,
+  .skill-node,
+  .completion-sheet,
+  .celebration {
     background: var(--surface-solid);
     backdrop-filter: none;
   }
