@@ -2,7 +2,7 @@
 
 **Proof beyond the screen.** QuestMark turns ordinary life into short, evidence-backed missions that help students discover what they can actually do.
 
-[Live demo](LIVE_DEMO_URL) · [20-second walkthrough](./docs/questmark-demo.webm) · [Product plan](./PLAN.md)
+[Live demo](https://questmark-ted.my-setia-mot-9282.chatgpt.site) · [20-second walkthrough](./docs/questmark-demo.webm) · [Product plan](./PLAN.md)
 
 ![QuestMark recommends nearby real-world missions](./docs/questmark-quests.png)
 
