@@ -2,7 +2,7 @@
 
 **Proof beyond the screen.** QuestMark turns ordinary life into short, evidence-backed missions that help students discover what they can actually do.
 
-[Live demo](https://questmark-ted.my-setia-mot-9282.chatgpt.site) · [20-second walkthrough](./docs/questmark-demo.webm) · [Product plan](./PLAN.md)
+[Live demo — ChatGPT sign-in](https://questmark-ted.my-setia-mot-9282.chatgpt.site) · [20-second walkthrough](./docs/questmark-demo.webm) · [Product plan](./PLAN.md)
 
 ![QuestMark recommends nearby real-world missions](./docs/questmark-quests.png)
 
@@ -29,6 +29,8 @@ Each completed mission becomes a private Proof Card containing evidence, reflect
 The demo recognises several Kuala Lumpur areas, calculates straight-line distance with the Haversine formula, and ranks its small local quest set on-device. Browser coordinates are never uploaded by the demo.
 
 This is intentionally labelled as a prototype: walking/transit times are estimates, the quest catalogue is limited, and AI assessment, authentication, media storage, and production route data still require backend services.
+
+The hosted demo currently requires ChatGPT sign-in because anonymous Sites publishing is disabled for this workspace.
 
 ## Stack
 
