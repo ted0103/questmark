@@ -2,9 +2,9 @@
 
 **Proof beyond the screen.** QuestMark turns ordinary life into short, evidence-backed missions that help students discover what they can actually do.
 
-[Live demo — ChatGPT sign-in](https://questmark-ted.my-setia-mot-9282.chatgpt.site) · [20-second walkthrough](./docs/questmark-demo.webm) · [Product plan](./PLAN.md)
+[![QuestMark liquid-glass skill world](./docs/questmark-banner.webp)](https://ted0103.github.io/questmark/)
 
-![QuestMark recommends nearby real-world missions](./docs/questmark-quests.png)
+[Open the installable app](https://ted0103.github.io/questmark/) · [20-second walkthrough](./docs/questmark-demo.webm) · [Product plan](./PLAN.md)
 
 ## The idea
 
@@ -30,7 +30,9 @@ The demo recognises several Kuala Lumpur areas, calculates straight-line distanc
 
 This is intentionally labelled as a prototype: walking/transit times are estimates, the quest catalogue is limited, and AI assessment, authentication, media storage, and production route data still require backend services.
 
-The hosted demo currently requires ChatGPT sign-in because anonymous Sites publishing is disabled for this workspace.
+The GitHub Pages release is public and installable through your browser. Progress and evidence stay on this device; there is no account or cloud sync.
+
+![QuestMark campaign poster](./docs/questmark-poster.webp)
 
 ## Stack
 
@@ -43,7 +45,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. Without environment variables, QuestMark runs as a persistent local demo using browser storage.
+Open `http://localhost:3000`. Without environment variables, QuestMark runs at the root path with device-local storage and no service worker.
 
 ## Canonical source and state
 
@@ -75,6 +77,4 @@ Product decisions and safety boundaries are documented in [`PLAN.md`](./PLAN.md)
 
 ## Deployment
 
-The connected Sites project is identified by `.openai/hosting.json`. Validate the
-exact source state with the commands above before saving and deploying a new
-version; do not create a second Sites project for this checkout.
+GitHub Actions exports the app with the `/questmark` base path, verifies the exported PWA offline, and deploys `out/` to GitHub Pages.
