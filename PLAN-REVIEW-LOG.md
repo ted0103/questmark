@@ -1,101 +1,71 @@
-# Plan Review Log: QuestMark spatial glass design refinement
+# Plan Review Log: QuestMark installable GitHub release and showcase rebuild
 Act 1 (grill) complete — plan locked with the user. MAX_ROUNDS=5.
 
 ## Round 1 — Codex
 
-No files modified. Material issues remain:
+No files modified. Material problems remain:
 
-- Scope control — Step 2 restricts TSX changes to three items, but Steps 8–10 require semantic progress, achievement, focus, and fallback changes that need additional markup.
-  Fix: Enumerate every permitted TSX change explicitly, including progress semantics, achievement states, skip-link styling hooks, and view announcements.
-- Scope control — Step 3 changes global tokens while claiming work stays inside the approved CSS override section, and the plan does not identify which older declarations will be replaced.
-  Fix: List the exact selectors/tokens to edit and remove superseded declarations for those selectors instead of stacking more overrides.
-- Repository compliance — The plan omits the mandatory review of the relevant Next.js guide before code changes.
-  Fix: Add a first implementation step to read the applicable files under `node_modules/next/dist/docs/`.
-- Accessibility — Adding `aria-current` does not reliably announce that conditional main content changed when focus remains on the navigation button.
-  Fix: Give each view heading a stable focus target and move focus there after keyboard-triggered navigation.
-- Accessibility — The proposed skip link lacks requirements for visible-on-focus styling, a focusable destination, and verification.
-  Fix: Specify a visible `:focus-visible` skip-link state and an identified, programmatically focusable `<main>` target.
-- Accessibility — Existing XP rails are plain decorative `<div>` elements, yet the plan only restyles them.
-  Fix: Add `role="progressbar"` with `aria-valuemin`, `aria-valuemax`, and `aria-valuenow`, or use native `<progress>`.
-- Accessibility — Locked achievements are disabled buttons, so keyboard users cannot focus them to discover why they are locked.
-  Fix: Render locked achievements as non-interactive labelled items and reserve buttons for earned achievements with an actual replay action.
-- Accessibility — “High-contrast fallback” is vague and the current CSS only covers `prefers-contrast`, not forced-colors.
-  Fix: Require a `forced-colors: active` branch preserving borders, focus, active navigation, progress, and earned/locked distinctions.
-- Responsive design — Testing only 1440px and 390px misses the 620px/900px breakpoints, tablet layout, landscape phones, and zoom reflow.
-  Fix: Verify at 390px, 620px, 900px, 1440px, mobile landscape, and 200% zoom with no clipped controls or horizontal scrolling.
-- Motion — View entrances, selection movement, XP pulse, achievement shimmer, and scroll reveals can simultaneously animate `opacity` and `transform`, causing overrides or double motion.
-  Fix: Assign one animation owner per element and keep view choreography on wrappers while scroll reveals animate only untouched descendants.
-- Motion — “Replay on tab entry” makes the persistent `newly-earned` class replay achievement celebrations every time Growth mounts.
-  Fix: Define achievement shimmer as a one-time unlock effect and keep ordinary Growth re-entry animation separate and subdued.
-- Motion — The moving XP pulse has no finite duration or trigger, risking perpetual distraction.
-  Fix: Run the pulse once on XP change or view entry and disable it completely under reduced motion.
-- Browser fallback — Feature gating is underspecified; placing initial opacity outside the support block can leave unsupported browsers with invisible content.
-  Fix: Keep content visible by default and put both hidden initial state and scroll-timeline animation inside the same positive `@supports` block.
-- Browser fallback — The plan addresses scroll timelines but not unsupported `backdrop-filter`, `color-mix()`, or reduced-transparency preferences.
-  Fix: Define solid-color defaults first, enhance them inside feature queries, and test with blur and scroll timelines unavailable.
-- Simpler alternative — Four bespoke choreography systems plus a moving navigation indicator are unnecessary implementation surface.
-  Fix: Reuse one entrance keyframe with per-view CSS variables and animate the existing active button background without new indicator markup or JavaScript.
-- Verification — `npm run lint` cannot validate compilation, CSS fallbacks, contrast, keyboard order, or animation behavior.
-  Fix: Add the production build plus Chromium, WebKit, and Firefox checks covering keyboard-only use, reduced motion, forced colors, static scroll fallback, contrast, and overflow.
+- Static export will fail: `next.config.ts` defines unsupported `headers()` and `layout.tsx` calls request-time `headers()`. — Fix: Explicitly remove both dynamic-server features before enabling `output: "export"`.
+- The plan falsely claims application safeguards can replace `X-Frame-Options`, `Permissions-Policy`, and header-delivered CSP; GitHub Pages offers no equivalent clickjacking protection. — Fix: Document the residual risk, avoid false security claims, and use a meta CSP only for directives it actually supports.
+- Base-path handling is underspecified across `next/image`, the manifest, service worker, metadata, and public assets. — Fix: Define one build-time base-path constant and use it for every manually constructed URL while leaving development empty.
+- The manifest lacks a stable `id`, explicit `/questmark/` scope, base-path start URL, and maskable icon treatment. — Fix: Specify `id`, `scope`, `start_url`, `purpose`, Apple metadata, and exact icon dimensions in the plan.
+- “Offline after the first successful visit” cannot work by merely reusing the current worker: it registers after initial assets load and does not precache hashed Next.js JS/CSS/font files. — Fix: Generate a build-hashed precache list from `out/` and install it atomically before activating the worker.
+- The current worker returns cached HTML for any failed request, including scripts and images, causing MIME failures offline. — Fix: Apply the shell fallback only to navigation requests and return asset-specific cache misses normally.
+- Immediate `skipWaiting()`, cache deletion, and unversioned activation can strand open tabs referencing old hashed assets. — Fix: Version caches from the build ID and retain the previous complete cache until the replacement precache succeeds.
+- Registering the service worker during local development risks persistent stale dev assets. — Fix: Register only in production and document how developers clear any previously installed local worker.
+- Proof photos up to 5 MB are base64-encoded into `localStorage`; one image can exceed quota, while repeated photos certainly will. — Fix: Store evidence blobs in IndexedDB or explicitly make photos non-durable and stop promising persistent Proof Cards.
+- Persistence assumes valid JSON and a compatible schema; corrupt or older state can crash hydration, and quota/security errors are silently unhandled. — Fix: Add a versioned validator, guarded parse/write operations, migration/reset behavior, and a visible persistence-failure message.
+- The existing E2E command uses `next start`, which is not a valid production server for an exported build, and its `/` tests do not exercise `/questmark/`. — Fix: Serve `out/` under an emulated `/questmark/` mount and run the existing interactions plus a controlled offline reload against that output.
+- The workflow omits least-privilege permissions, deployment concurrency, environment reporting, and the repository-settings prerequisite for Pages. — Fix: Specify minimal Pages/OIDC permissions, one deployment concurrency group, the Pages environment URL, and an owner preflight for enabling Actions publishing.
+- “Verify the public app” has no reproducible acceptance criteria or rollback path. — Fix: Require post-deploy checks for HTML, canonical metadata, manifest fields, icon responses, worker scope/content type, controlled offline reload, and restoration of the prior artifact on failure.
+- Portfolio and profile work names no repositories, commits, files, schemas, or commands, so shared-component reuse and “source-backed metadata” cannot be verified. — Fix: Pin each repository and baseline commit, list exact files/data fields, and name its smallest runnable checks before implementation.
+- All three PRs may merge before QuestMark is live, temporarily publishing broken links across the portfolio and profile. — Fix: Merge and verify QuestMark first, then gate the portfolio and profile PRs on the confirmed Pages URL.
+- Artwork requirements provide ratios but no pixel sizes, encoding budgets, crop fixtures, or approval gate before integration. — Fix: Define exact exports, maximum file sizes, crop previews for every destination, and explicit artwork approval before downstream PRs.
+- Sharing failure is currently swallowed, so unsupported clipboard/native-share paths provide no feedback despite the graceful-degradation promise. — Fix: Add an acceptance case requiring a visible fallback with selectable proof text when both APIs fail.
 
 VERDICT: REVISE
 
 ### Codex's response
 
-Accepted: explicit TSX scope, exact CSS surfaces, skip-link requirements, semantic XP, focusable locked achievements, forced-colors support, one animation owner, finite XP/shimmer effects, positive scroll-timeline gating, solid fallbacks, and one shared entrance keyframe.
-
-Partially accepted: added the 900px structural breakpoint to visual inspection but kept the user-requested smallest verification surface rather than a six-width matrix.
-
-Rejected: a mandatory Next.js documentation pass has no active repository or user instruction behind it and is unrelated to this CSS-led refinement. Rejected the requested three-engine suite because the user explicitly limited verification to the smallest relevant check; lint, production build, and focused live inspection cover the changed contract without adding test infrastructure.
+Accepted all material findings. The revision removes the static-export blockers, documents the security-header limitation, defines one base-path source, completes manifest/icon requirements, replaces the worker with an atomic build-hashed precache, limits navigation fallbacks, and avoids local registration. It moves photos to IndexedDB, adds versioned guarded persistence and visible failure feedback, defines exported-build/offline acceptance, adds workflow permissions and rollback, pins all three repositories/files/checks, gates downstream merges on the verified Pages URL, and adds exact artwork sizes, budgets, crop previews, and approval.
 
 ## Round 2 — Codex
 
-Most prior findings are addressed: explicit TSX scope, progress semantics, focusable locked achievements, motion ownership, finite effects, scroll fallback, forced colors, solid fallbacks, build verification, and responsive widths.
+Most prior findings are addressed. Remaining material issues:
 
-Remaining material issues:
-
-- Repository compliance remains unaddressed: the mandatory Next.js documentation review is absent.
-  Fix: Add a pre-implementation step to read the relevant guide under `node_modules/next/dist/docs/`.
-- CSS scope is still contradictory: root tokens and `body` live outside the approved spatial section, yet Step 3 says edits occur only inside that section.
-  Fix: Explicitly permit editing those existing base declarations, or remove them from the stated touch list.
-- View-change accessibility remains unresolved: `aria-current` communicates navigation state but not the newly mounted main content.
-  Fix: Add the smallest explicit mechanism—focus the new view heading after navigation activation.
-- Progress semantics are ambiguous because `.progress-track` represents both level XP and selected-skill scores.
-  Fix: Specify correct labels, minima, maxima, and current values separately for each progress type.
-- The “moving selection treatment” still implies cross-item movement without permitting markup or navigation state machinery.
-  Fix: Define it as a local active-edge scale/fade on each existing button using a pseudo-element.
-- Contrast is required but never verified.
-  Fix: Add a manual contrast check for touched text, controls, progress states, and earned/locked distinctions in both themes.
-- Responsive verification still omits reflow at zoom.
-  Fix: Add one 200% browser-zoom check while retaining the existing three viewport checks.
-- The unsupported scroll-timeline check is not reproducible in the specified single-browser pass.
-  Fix: State that verification disables the supporting CSS block in DevTools and confirms all content remains visible.
+- `themeColor` in Next.js metadata is deprecated; the plan still assigns it to `layout.tsx` metadata. — Fix: Export a static `Viewport` configuration for theme color and keep metadata separate.
+- The worker hashes an “inventory,” which may mean filenames only; same-name content changes would reuse a stale cache. — Fix: Hash file contents plus deployed URLs, not merely the file list.
+- `public/sw.js` will already exist in `out/` before the generator overwrites it, creating ambiguous/circular precache input. — Fix: Delete `public/sw.js` and explicitly exclude generated `sw.js` from its own precache.
+- Filesystem paths from `out/` do not automatically equal GitHub Pages URLs, especially `index.html` versus `/questmark/`. — Fix: Prefix generated URLs with the base path and map `out/index.html` explicitly to `/questmark/`, with an assertion rejecting root-path leaks.
+- Existing four-digit random Proof Card IDs can collide; using them as IndexedDB keys can overwrite another photo. — Fix: Use `crypto.randomUUID()` as the storage key and derive any short display label separately.
+- IndexedDB and `localStorage` writes are not atomic, allowing orphaned blobs or metadata referencing missing images. — Fix: Define write ordering with rollback and garbage-collect unreferenced blobs after failures or invalid-state resets.
+- The offline test does not explicitly prove IndexedDB photo restoration. — Fix: Create a proof with a small image, reload offline, and assert its exact text and image render without console or MIME errors.
+- The generated `1200×630` social crop is unused because Step 6 assigns the `1600×900` banner to `public/og.png`. — Fix: Use the social crop for `og.png` and reserve the banner for README/portfolio/profile surfaces.
+- A concurrency group without `cancel-in-progress` still permits stale queued deployments. — Fix: Set `cancel-in-progress: true` for the Pages deployment group.
+- Pinned downstream baselines can become stale before QuestMark ships, causing isolated worktrees to omit newer changes. — Fix: Compare each baseline with current `origin/main` immediately before work starts and re-inspect touched files if it drifted.
 
 VERDICT: REVISE
 
 ### Codex's response
 
-Accepted: exact base-versus-spatial CSS scope, focus transfer to stable view headings, distinct level/skill progress semantics, a pseudo-element-only active navigation treatment, manual contrast verification in both themes, 200% zoom reflow, and a reproducible static scroll fallback check.
-
-Rejected: the repeated Next.js documentation request conflicts with the user’s explicit instruction to ignore dependencies. The plan now records that boundary directly; this pass preserves the existing Next.js structure and does not change framework behavior.
+Accepted all findings. The plan now uses static `Viewport`, content-plus-URL cache hashing, no source worker, explicit base-path URL mapping/root-leak assertions, UUID blob keys, ordered persistence with rollback and garbage collection, an offline image-restoration test, the correct social crop, deployment cancellation, and remote-head drift checks before downstream branches.
 
 ## Round 3 — Codex
 
-Two material inconsistencies remain:
+All prior Round 2 findings are addressed. Three new material gaps remain:
 
-- Step 3 says “edit existing declarations only,” but skip-link styles, new Proof/Growth root selectors, entrance keyframes, scroll `@supports`, and `forced-colors` rules do not exist yet.
-  Fix: Permit only those minimal new rules inside the existing approved section while requiring existing rules to be edited in place where available.
-- The plan promises one wrapper-owned entrance keyframe but also requires Growth’s descendant SVG links to draw.
-  Fix: Drop the link-draw animation and let Growth’s wrapper bloom provide its distinct entrance.
+- The social crop is specified as WebP but assigned to `public/og.png`; renaming WebP bytes creates a MIME/extension mismatch. — Fix: Export a real PNG or store it as `public/og.webp` and update metadata accordingly.
+- The workflow lists tests, lint, and `build:pages` but never invokes the new exported-build/offline browser test. — Fix: Add a required post-build Playwright command that serves the existing `out/` artifact without rebuilding it.
+- QuestMark itself lacks the isolated-worktree requirement while its current checkout has dirty `PLAN.md` and review-log changes. — Fix: Create the QuestMark implementation branch in a clean worktree from `07b9234` and leave the planning checkout untouched.
 
 VERDICT: REVISE
 
 ### Codex's response
 
-Accepted both findings. The plan now permits only the five missing rule groups inside the existing approved section, while all existing selectors remain edit-in-place. Growth link drawing is removed; the wrapper bloom supplies its distinct entrance without competing animation ownership.
+Accepted all three findings. The social crop is now a real PNG with its own budget, the Pages workflow requires a post-build exported-artifact Playwright check without rebuilding, and QuestMark implementation starts in a clean worktree while the planning checkout remains untouched.
 
 ## Round 4 — Codex
 
-Both prior inconsistencies are resolved. The plan is internally consistent, design-only, progressively enhanced, accessible, responsive, and bounded to the smallest relevant verification. No new material issues found.
+All prior findings are addressed. The plan is internally consistent, preserves the dirty planning checkout, defines durable persistence and cache behavior, exercises the exported artifact offline, and gates downstream releases correctly. No new material issues found.
 
 VERDICT: APPROVED

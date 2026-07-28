@@ -31,6 +31,8 @@ import {
 } from "@phosphor-icons/react";
 import { ChangeEvent, FormEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ServiceWorker } from "./service-worker";
+import { assetPath } from "./base-path";
+import { clearEvidence, getEvidence, pruneEvidence, putEvidence } from "./evidence-store";
 import { buildSkillMap, SkillName } from "./skill-map-model";
 import { Coordinates, DEFAULT_ORIGIN, recommendQuests, resolveArea } from "./quest-recommendations";
 
@@ -58,8 +60,11 @@ type Proof = {
   learned: string;
   created: string;
   image?: string;
+  imageKey?: string;
   verified: boolean;
 };
+
+type SavedState = { version: 1; proofs: Proof[]; xp: number; portfolio: string[]; theme: "light" | "dark" };
 
 const QUESTS: Quest[] = [
   {
@@ -121,7 +126,7 @@ const INITIAL_PROOFS: Proof[] = [
     did: "I reorganised the notice around the one action visitors needed to take first.",
     learned: "People missed the original instruction because every line had the same visual weight.",
     created: "26 Jul 2026",
-    image: "/quest-evidence-cafe.webp",
+    image: assetPath("/quest-evidence-cafe.webp"),
     verified: true,
   },
 ];
@@ -291,28 +296,60 @@ export function QuestMarkApp() {
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [showDemoGuide, setShowDemoGuide] = useState(true);
   const hydrated = useRef(false);
+  const objectUrls = useRef<string[]>([]);
   const dialogTrigger = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const saved = localStorage.getItem("questmark-state");
-      if (saved) {
-        const state = JSON.parse(saved);
-        setProofs(state.proofs || INITIAL_PROOFS);
-        setXp(state.xp || 620);
-        setPortfolio(state.portfolio || ["QM-0248"]);
-        setTheme(state.theme || "light");
+    let cancelled = false;
+    void (async () => {
+      try {
+        const raw = localStorage.getItem("questmark-state");
+        const state = raw ? JSON.parse(raw) as SavedState : null;
+        if (state && state.version === 1 && Array.isArray(state.proofs) && Number.isFinite(state.xp) && Array.isArray(state.portfolio) && ["light", "dark"].includes(state.theme)) {
+          const restored = await Promise.all(state.proofs.map(async (proof) => {
+            if (!proof.imageKey) return proof;
+            const blob = await getEvidence(proof.imageKey);
+            if (!blob) return { ...proof, imageKey: undefined };
+            const image = URL.createObjectURL(blob);
+            objectUrls.current.push(image);
+            return { ...proof, image };
+          }));
+          if (!cancelled) {
+            setProofs(restored);
+            setXp(state.xp);
+            setPortfolio(state.portfolio);
+            setTheme(state.theme);
+          }
+          await pruneEvidence(new Set(restored.flatMap((proof) => proof.imageKey ? [proof.imageKey] : [])));
+        } else if (raw) {
+          localStorage.removeItem("questmark-state");
+          await clearEvidence();
+          setToast("Saved demo was reset after an update");
+        }
+        if (!cancelled) setShowDemoGuide(localStorage.getItem("questmark-guide-dismissed") !== "true");
+      } catch {
+        localStorage.removeItem("questmark-state");
+        await clearEvidence().catch(() => undefined);
+        if (!cancelled) setToast("Local progress could not be restored");
+      } finally {
+        hydrated.current = true;
       }
-      setShowDemoGuide(localStorage.getItem("questmark-guide-dismissed") !== "true");
-      hydrated.current = true;
-    }, 0);
-    return () => window.clearTimeout(timeout);
+    })();
+    return () => {
+      cancelled = true;
+      objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    };
   }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     if (hydrated.current) {
-      localStorage.setItem("questmark-state", JSON.stringify({ proofs, xp, portfolio, theme }));
+      try {
+        const savedProofs = proofs.map((proof) => ({ ...proof, image: undefined }));
+        localStorage.setItem("questmark-state", JSON.stringify({ version: 1, proofs: savedProofs, xp, portfolio, theme } satisfies SavedState));
+      } catch {
+        window.setTimeout(() => setToast("Progress could not be saved on this device"), 0);
+      }
     }
   }, [proofs, xp, portfolio, theme]);
 
@@ -355,12 +392,15 @@ export function QuestMarkApp() {
 
   function dismissGuide() {
     setShowDemoGuide(false);
-    localStorage.setItem("questmark-guide-dismissed", "true");
+    try { localStorage.setItem("questmark-guide-dismissed", "true"); } catch { setToast("Guide preference could not be saved"); }
   }
 
-  function resetDemo() {
+  async function resetDemo() {
     localStorage.removeItem("questmark-state");
     localStorage.removeItem("questmark-guide-dismissed");
+    await clearEvidence().catch(() => undefined);
+    objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    objectUrls.current = [];
     setProofs(INITIAL_PROOFS);
     setXp(620);
     setPortfolio(["QM-0248"]);
@@ -386,8 +426,20 @@ export function QuestMarkApp() {
     navigator.vibrate?.(18);
   }
 
-  function complete(proof: Proof) {
-    const nextProofs = [proof, ...proofs];
+  async function complete(proof: Proof, imageBlob?: Blob) {
+    let completedProof = proof;
+    if (imageBlob && proof.imageKey) {
+      try {
+        await putEvidence(proof.imageKey, imageBlob);
+        const image = URL.createObjectURL(imageBlob);
+        objectUrls.current.push(image);
+        completedProof = { ...proof, image };
+      } catch {
+        completedProof = { ...proof, image: undefined, imageKey: undefined };
+        setToast("Photo could not be stored; your reflection was kept");
+      }
+    }
+    const nextProofs = [completedProof, ...proofs];
     const before = achievementStates(proofs);
     const unlocked = achievementStates(nextProofs).filter((achievement) =>
       achievement.earned && !before.find((item) => item.id === achievement.id)?.earned,
@@ -396,7 +448,7 @@ export function QuestMarkApp() {
     setNewAchievements(unlocked.map((achievement) => achievement.id));
     setXp((current) => current + proof.quest.xp);
     setSelected(null);
-    setCelebration(proof);
+    setCelebration(completedProof);
     if (unlocked.length) {
       playAchievement();
       setToast(`Achievement unlocked: ${unlocked.map((achievement) => achievement.name).join(" + ")}`);
@@ -426,12 +478,16 @@ export function QuestMarkApp() {
     try {
       if (navigator.share) {
         await navigator.share({ title: "My QuestMark Proof Card", text });
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(text);
         setToast("Proof Card copied");
+      } else {
+        throw new Error("Sharing unavailable");
       }
-    } catch {
-      // Closing the native share sheet is an intentional no-op.
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      window.prompt("Copy your Proof Card", text);
+      setToast("Copy the proof text manually");
     }
   }
 
@@ -574,7 +630,7 @@ function QuestsView({
         <div className="skill-world" aria-hidden="true">
           <span className="world-glow" />
           <span className="world-globe-shell">
-            <Image className="world-globe" src="/questmark-liquid-globe.png" alt="" width={1024} height={1024} priority />
+            <Image className="world-globe" src={assetPath("/questmark-liquid-globe.png")} alt="" width={1024} height={1024} priority />
           </span>
         </div>
         <div className="floating-skill skill-communication"><span><Icon name="chat" size={16} /></span><p><small>SKILL SIGNAL</small><strong>Communication</strong></p></div>
@@ -645,10 +701,11 @@ function QuestsView({
   );
 }
 
-function CompletionSheet({ quest, originX, originY, onClose, onComplete }: { quest: Quest; originX: number; originY: number; onClose: () => void; onComplete: (proof: Proof) => void }) {
+function CompletionSheet({ quest, originX, originY, onClose, onComplete }: { quest: Quest; originX: number; originY: number; onClose: () => void; onComplete: (proof: Proof, image?: Blob) => Promise<void> }) {
   const [did, setDid] = useState("");
   const [learned, setLearned] = useState("");
   const [image, setImage] = useState<string>();
+  const [imageBlob, setImageBlob] = useState<Blob>();
   const [evidenceError, setEvidenceError] = useState("");
   const modalRef = useModalFocus(onClose);
 
@@ -660,22 +717,23 @@ function CompletionSheet({ quest, originX, originY, onClose, onComplete }: { que
       return;
     }
     setEvidenceError("");
-    const reader = new FileReader();
-    reader.onload = () => setImage(String(reader.result));
-    reader.readAsDataURL(file);
+    if (image) URL.revokeObjectURL(image);
+    setImageBlob(file);
+    setImage(URL.createObjectURL(file));
   }
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    onComplete({
-      id: `QM-${Math.floor(1000 + Math.random() * 8999)}`,
+    const imageKey = imageBlob ? crypto.randomUUID() : undefined;
+    await onComplete({
+      id: `QM-${(imageKey ?? crypto.randomUUID()).slice(0, 8).toUpperCase()}`,
       quest,
       did,
       learned,
       created: new Intl.DateTimeFormat("en-MY", { day: "numeric", month: "short", year: "numeric" }).format(new Date()),
-      image,
+      imageKey,
       verified: false,
-    });
+    }, imageBlob);
   }
 
   return (
@@ -720,7 +778,7 @@ function Celebration({ proof, onClose, onShare }: { proof: Proof; onClose: () =>
       <section ref={modalRef} className="celebration" role="dialog" aria-modal="true" aria-labelledby="proof-title" aria-describedby="proof-summary" tabIndex={-1}>
         <button className="sheet-close inverse" onClick={onClose} aria-label="Close" data-dialog-autofocus><Icon name="close" /></button>
         <div className="proof-photo">
-          <Image src={proof.image || "/quest-evidence-cafe.webp"} alt="Quest evidence" fill unoptimized={Boolean(proof.image)} />
+          <Image src={proof.image || assetPath("/quest-evidence-cafe.webp")} alt="Quest evidence" fill unoptimized={Boolean(proof.image)} />
           <div className="photo-shade" />
           <span className="verified-stamp"><Icon name="mark" size={15} /> PROTOTYPE ASSESSMENT</span>
         </div>
@@ -756,7 +814,7 @@ function ProofView({ proofs, portfolio, setPortfolio, onShare, setToast }: { pro
         {proofs.map((proof) => (
           <article className="proof-card" key={proof.id}>
             <div className="proof-card-image">
-              <Image src={proof.image || "/quest-evidence-cafe.webp"} alt="" fill unoptimized={Boolean(proof.image)} />
+              <Image src={proof.image || assetPath("/quest-evidence-cafe.webp")} alt="" fill unoptimized={Boolean(proof.image)} />
               <span>{proof.verified ? "Peer verified" : "Private proof"}</span>
             </div>
             <div className="proof-card-body">

@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { assetPath, basePath } from "./base-path";
 
 export function ServiceWorker() {
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register(assetPath("/sw.js"), { scope: `${basePath || ""}/` }).catch(() => undefined);
     }
   }, []);
 
