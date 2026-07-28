@@ -435,11 +435,17 @@ export function QuestMarkApp() {
     }
   }
 
+  function navigateTo(nextTab: Tab, focusHeading = false) {
+    setTab(nextTab);
+    if (focusHeading) window.requestAnimationFrame(() => document.getElementById(`${nextTab}-title`)?.focus());
+  }
+
   return (
     <div className="app-shell">
       <ServiceWorker />
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <header className="topbar">
-        <button className="brand" onClick={() => setTab("quests")} aria-label="QuestMark home">
+        <button className="brand" onClick={(event) => navigateTo("quests", event.detail === 0)} aria-label="QuestMark home">
           <span className="brand-mark"><Icon name="mark" size={18} /></span>
           <span>QuestMark</span>
         </button>
@@ -448,11 +454,11 @@ export function QuestMarkApp() {
           <button className="icon-button" onClick={() => setTheme(theme === "light" ? "dark" : "light")} aria-label={`Use ${theme === "light" ? "dark" : "light"} theme`}>
             <Icon name={theme === "light" ? "moon" : "sun"} />
           </button>
-          <button className="avatar" onClick={() => setTab("profile")} aria-label="Open profile">TM</button>
+          <button className="avatar" onClick={(event) => navigateTo("profile", event.detail === 0)} aria-label="Open profile">TM</button>
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {tab === "quests" && (
           <QuestsView
             location={location}
@@ -485,7 +491,7 @@ export function QuestMarkApp() {
           ["growth", "growth", "Growth"],
           ["profile", "user", "You"],
         ] as const).map(([id, icon, label]) => (
-          <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
+          <button key={id} className={tab === id ? "active" : ""} onClick={(event) => navigateTo(id, event.detail === 0)} aria-current={tab === id ? "page" : undefined}>
             <Icon name={icon} />
             <span>{label}</span>
           </button>
@@ -534,7 +540,7 @@ function QuestsView({
       <section className="quest-heading">
         <div>
           <p className="eyebrow">Today, 27 July</p>
-          <h1>Pick a quest.<br />Leave with a story.</h1>
+          <h1 id="quests-title" tabIndex={-1}>Pick a quest.<br />Leave with a story.</h1>
           <p>Do one small thing in the real world. Bring back proof, reflection, and XP.</p>
         </div>
         <div className="level-orbit" aria-label={`Level ${level.level}, ${level.remaining} of ${level.needed} XP`}>
@@ -567,14 +573,9 @@ function QuestsView({
       <section className="spatial-stage" aria-label="Today’s quests">
         <div className="skill-world" aria-hidden="true">
           <span className="world-glow" />
-          <span className="world-ring ring-one" />
-          <span className="world-ring ring-two" />
-          <span className="world-ring ring-three" />
-          <span className="world-ring ring-four" />
-          <span className="world-core"><Icon name="spark" size={24} /></span>
-          <span className="world-particle particle-one" />
-          <span className="world-particle particle-two" />
-          <span className="world-particle particle-three" />
+          <span className="world-globe-shell">
+            <Image className="world-globe" src="/questmark-liquid-globe.png" alt="" width={1024} height={1024} priority />
+          </span>
         </div>
         <div className="floating-skill skill-communication"><span><Icon name="chat" size={16} /></span><p><small>SKILL SIGNAL</small><strong>Communication</strong></p></div>
         <div className="floating-skill skill-courage"><span><Icon name="spark" size={16} /></span><p><small>SKILL SIGNAL</small><strong>Courage</strong></p></div>
@@ -746,9 +747,9 @@ function ProofView({ proofs, portfolio, setPortfolio, onShare, setToast }: { pro
   }
 
   return (
-    <div className="page-wrap">
+    <div className="page-wrap proof-page">
       <section className="section-heading">
-        <div><p className="eyebrow">Evidence archive</p><h1>Your proof, in hand.</h1><p>Private by default. You choose what leaves QuestMark.</p></div>
+        <div><p className="eyebrow">Evidence archive</p><h1 id="proof-title" tabIndex={-1}>Your proof, in hand.</h1><p>Private by default. You choose what leaves QuestMark.</p></div>
         <button className="outline-button" onClick={() => setToast(`${portfolio.length} cards ready for portfolio`)}>{portfolio.length} in portfolio <Icon name="arrow" size={17} /></button>
       </section>
       <div className="proof-grid">
@@ -855,8 +856,8 @@ function GrowthView({ proofs, level, xp, newAchievements }: { proofs: Proof[]; l
       : null;
 
   return (
-    <div className="page-wrap">
-      <section className="section-heading"><div><p className="eyebrow">Skill map</p><h1>Experience leaves a shape.</h1><p>Progress comes from completed evidence, not self-selected claims.</p></div></section>
+    <div className="page-wrap growth-page">
+      <section className="section-heading"><div><p className="eyebrow">Skill map</p><h1 id="growth-title" tabIndex={-1}>Experience leaves a shape.</h1><p>Progress comes from completed evidence, not self-selected claims.</p></div></section>
       <div className="growth-layout">
         <div className="skill-map-column">
           <section className={`skill-map ${compactMap ? "compact" : ""}`} ref={mapRef} aria-label="Evidence-backed skill network">
@@ -947,7 +948,7 @@ function GrowthView({ proofs, level, xp, newAchievements }: { proofs: Proof[]; l
                     <p className="eyebrow">Your constellation</p>
                     <h2 id="map-detail-title">Level {level.level}</h2>
                     <div className="detail-score"><strong>{xp}</strong><span>Lifetime XP<br />{level.needed - level.remaining} to next level</span></div>
-                    <div className="progress-track"><span style={{ width: `${(level.remaining / level.needed) * 100}%` }} /></div>
+                    <div className="progress-track" role="progressbar" aria-label={`Level ${level.level} progress`} aria-valuemin={0} aria-valuemax={level.needed} aria-valuenow={level.remaining}><span style={{ width: `${(level.remaining / level.needed) * 100}%` }} /></div>
                     <div className="map-summary detail-summary">
                       <div><small>STRONGEST</small><strong>{strongest.score ? strongest.name : "Uncharted"}</strong></div>
                       <div><small>EMERGING</small><strong>{emerging?.name || "Complete a quest"}</strong></div>
@@ -960,7 +961,7 @@ function GrowthView({ proofs, level, xp, newAchievements }: { proofs: Proof[]; l
                     <p className="eyebrow">Skill evidence</p>
                     <h2 id="map-detail-title">{selected.name}</h2>
                     <div className="detail-score"><strong>{selected.score}</strong><span>Skill score<br />{selected.xp} allocated XP</span></div>
-                    <div className="progress-track"><span style={{ width: `${selected.score}%` }} /></div>
+                    <div className="progress-track" role="progressbar" aria-label={`${selected.name} skill score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={selected.score}><span style={{ width: `${selected.score}%` }} /></div>
                     <p>{selected.proofIds.length ? `${selected.proofIds.length} Proof ${selected.proofIds.length === 1 ? "Card" : "Cards"} contributed${selected.verifiedCount ? `, ${selected.verifiedCount} peer verified` : ""}.` : "Uncharted. Your first relevant Proof Card will bring this skill to life."}</p>
                     <h3>Contributing proof</h3>
                     <div className="detail-proof-list">
@@ -987,7 +988,7 @@ function GrowthView({ proofs, level, xp, newAchievements }: { proofs: Proof[]; l
           ) : <>
             <p className="eyebrow">Level {level.level}</p>
             <h2>{level.remaining} / {level.needed} XP</h2>
-            <div className="progress-track"><span style={{ width: `${(level.remaining / level.needed) * 100}%` }} /></div>
+            <div className="progress-track" role="progressbar" aria-label={`Level ${level.level} progress`} aria-valuemin={0} aria-valuemax={level.needed} aria-valuenow={level.remaining}><span style={{ width: `${(level.remaining / level.needed) * 100}%` }} /></div>
             <p>{level.needed - level.remaining} XP until your next level.</p>
             <div className="map-summary">
               <div><small>STRONGEST</small><strong>{strongest.score ? strongest.name : "Uncharted"}</strong></div>
@@ -1000,11 +1001,12 @@ function GrowthView({ proofs, level, xp, newAchievements }: { proofs: Proof[]; l
                   type="button"
                   className={`${achievement.earned ? "earned" : ""} ${newAchievements.includes(achievement.id) ? "newly-earned" : ""}`}
                   key={achievement.id}
-                  disabled={!achievement.earned}
                   onClick={() => {
+                    if (!achievement.earned) return;
                     playAchievement();
                     navigator.vibrate?.(35);
                   }}
+                  aria-disabled={!achievement.earned}
                   aria-label={achievement.earned ? `Replay ${achievement.name} achievement sound` : `${achievement.name}, locked`}
                 >
                   <span className="achievement-logo"><Icon name={achievement.icon} size={19} /></span>
@@ -1103,7 +1105,7 @@ function ProfileView({ theme, setTheme, reviewSent, setReviewSent, onReset }: { 
     <div className="page-wrap profile-page">
       <section className="profile-intro">
         <div className="large-avatar">TM</div>
-        <div><p className="eyebrow">18-24 track</p><h1>Ted’s field record</h1><p>Kuala Lumpur: creativity, communication, courage</p></div>
+        <div><p className="eyebrow">18-24 track</p><h1 id="profile-title" tabIndex={-1}>Ted’s field record</h1><p>Kuala Lumpur: creativity, communication, courage</p></div>
       </section>
       <div className="settings-layout">
         <section className="settings-card">
