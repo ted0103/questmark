@@ -1,80 +1,102 @@
+<div align="center">
+
 # QuestMark
 
-**Proof beyond the screen.** QuestMark turns ordinary life into short, evidence-backed missions that help students discover what they can actually do.
+**Proof beyond the screen.**
 
-[![QuestMark liquid-glass skill world](./docs/questmark-banner.webp)](https://ted0103.github.io/questmark/)
+Real-world skill quests that turn action, evidence, and reflection into portable proof of what a student can do.
 
-[Open the installable app](https://ted0103.github.io/questmark/) · [20-second walkthrough](./docs/questmark-demo.webm) · [Product plan](./PLAN.md)
+[Open the installable app](https://ted0103.github.io/questmark/) · [Watch the 20-second walkthrough](./docs/questmark-demo.webm) · [Read the product plan](./PLAN.md)
+
+</div>
+
+[![QuestMark skill world and nearby missions](./docs/questmark-banner.webp)](https://ted0103.github.io/questmark/)
 
 ## The idea
 
-Most personal-development apps measure what happens on a screen. QuestMark sends people into the real world: interview a local founder, spot poor public design, teach a difficult concept, or improve a confusing message.
+Most personal-development products measure activity on a screen. QuestMark sends students into the real world: interview a local founder, notice inaccessible public design, teach a difficult concept, or improve a confusing message.
 
-Each completed mission becomes a private Proof Card containing evidence, reflection, skills demonstrated, XP, and optional peer verification. Users decide which cards to share or feature in a portfolio.
+Every completed quest becomes a private Proof Card that connects concrete evidence and reflection to demonstrated skills. Those cards build a personal skill map and can be deliberately selected for a portfolio.
 
-## What the prototype demonstrates
+## Product loop
 
-- Daily quests ranked from a selected place or device location
-- Photo, audio, note, and short-video evidence flows
-- Animated Proof Cards and an interactive skill constellation
-- XP, levels, streaks, achievements, and pass-with-penalty choices
-- Private-by-default evidence with explicit portfolio sharing
-- Desktop and mobile layouts with reduced-motion support
-- A one-click reset for a clean portfolio presentation
+1. **Discover** — rank short missions from a selected Kuala Lumpur area or device location.
+2. **Act** — complete a bounded real-world task with clear evidence and safety guidance.
+3. **Reflect** — add one photo and explain what happened and what changed in your thinking.
+4. **Prove** — receive XP, a Proof Card, achievements, and an updated skill constellation.
 
-![QuestMark skill growth view](./docs/questmark-growth.png)
+## What the prototype includes
 
-## Recommendation logic
+- Three location-aware quests with estimated walking or transit times
+- On-device Haversine distance ranking for recognised Kuala Lumpur areas
+- JPEG, PNG, or WebP evidence capture with a 5 MB limit
+- Structured action and reflection prompts
+- Private Proof Cards with explicit portfolio selection and native text sharing
+- XP, levels, streaks, achievements, and an evidence-derived skill map
+- Light and dark themes, responsive layouts, keyboard-safe dialogs, and reduced-motion support
+- Installable PWA behavior with a precached offline app shell
+- One-click restoration of the original portfolio demo
 
-The demo recognises several Kuala Lumpur areas, calculates straight-line distance with the Haversine formula, and ranks its small local quest set on-device. Browser coordinates are never uploaded by the demo.
+## Try it
 
-This is intentionally labelled as a prototype: walking/transit times are estimates, the quest catalogue is limited, and AI assessment, authentication, media storage, and production route data still require backend services.
+Open [QuestMark on GitHub Pages](https://ted0103.github.io/questmark/). The public prototype requires no account and stores its state on the current device.
 
-The GitHub Pages release is public and installable through your browser. Progress and evidence stay on this device; there is no account or cloud sync.
+> [!NOTE]
+> Install and offline behavior use your browser's native PWA support. Open the app online once so its service worker can cache the exported application before testing it offline.
 
-![QuestMark campaign poster](./docs/questmark-poster.webp)
+## Local-first privacy
 
-## Stack
+The deployed prototype has no active backend:
 
-Next.js 16, React 19, TypeScript, CSS, Supabase-ready schema, Playwright, and browser-native media/location APIs.
+- quest progress, XP, portfolio choices, and reflections use versioned `localStorage` state;
+- evidence image blobs stay in IndexedDB;
+- location coordinates are used only for on-device ranking;
+- Proof Cards are private until the user chooses to share their text or mark them for a portfolio;
+- resetting the demo clears only QuestMark's local state and evidence.
+
+> [!IMPORTANT]
+> This is a product prototype, not a production assessment system. Travel times are estimates, the quest catalogue is intentionally small, and peer verification is demonstrated rather than authenticated. Accounts, cloud sync, backend AI assessment, production routing, and hosted media storage are not shipped.
 
 ## Run locally
 
 ```bash
-npm install
+git clone https://github.com/ted0103/questmark.git
+cd questmark
+npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. Without environment variables, QuestMark runs at the root path with device-local storage and no service worker.
+Open `http://localhost:3000`. Local development runs at the root path without registering a service worker.
 
-## Canonical source and state
+### Useful commands
 
-- Product shell and interaction flow: `src/app/questmark-app.tsx`
-- Design tokens, component styling, motion, and breakpoints: `src/app/globals.css`
-- Optional backend schema: `supabase/migrations/20260727073720_questmark_core.sql`
-- Demo persistence: browser `localStorage`; the reset action clears only QuestMark demo data.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the Next.js development server |
+| `npm test` | Run the recommendation and skill-map model self-tests |
+| `npm run lint` | Run ESLint |
+| `npm run build` | Create the production static export |
+| `npm run test:e2e` | Build the Pages variant and run desktop/mobile Playwright checks |
+| `npm run build:pages` | Export the `/questmark` PWA and generate its service worker |
 
-Keep the local fallback working when adding backend features. Location ranking stays
-on-device, evidence remains private by default, and every modal must trap keyboard
-focus, close with Escape, and restore focus to its trigger.
+## Architecture
 
-## Quality checks
+| Area | Source |
+| --- | --- |
+| Product shell and interaction flow | [`src/app/questmark-app.tsx`](./src/app/questmark-app.tsx) |
+| Quest location ranking | [`src/app/quest-recommendations.ts`](./src/app/quest-recommendations.ts) |
+| Evidence-derived skill graph | [`src/app/skill-map-model.ts`](./src/app/skill-map-model.ts) |
+| Local image persistence | [`src/app/evidence-store.ts`](./src/app/evidence-store.ts) |
+| Design tokens, components, and motion | [`src/app/globals.css`](./src/app/globals.css) |
+| PWA manifest and worker generation | [`src/app/manifest.ts`](./src/app/manifest.ts), [`scripts/build-service-worker.mjs`](./scripts/build-service-worker.mjs) |
+| Optional backend model | [`supabase/migrations/20260727073720_questmark_core.sql`](./supabase/migrations/20260727073720_questmark_core.sql) |
 
-```bash
-npm test
-npm run lint
-npm run build
-npm run test:e2e
-```
+The Supabase clients and row-level-security schema are future-pilot scaffolding. They are not connected to the public local-first experience.
 
-The interaction suite covers quest launch, keyboard focus, location reranking, demo reset, and desktop/mobile Chromium.
+## Quality and deployment
 
-## Optional Supabase pilot
+The browser suite verifies quest completion, dialog focus and Escape handling, location reranking, demo restoration, device-local image recovery, and controlled offline reloads on desktop and mobile Chromium.
 
-Create a free Supabase project, add the environment values described in `.env.example`, and apply `supabase/migrations/20260727073720_questmark_core.sql`. Row-level security protects exposed tables; never expose `SUPABASE_SECRET_KEY`.
+The [`Deploy QuestMark`](./.github/workflows/pages.yml) workflow installs from the lockfile, runs model tests and linting, builds the `/questmark` export, exercises the exported PWA, and deploys the verified artifact to GitHub Pages.
 
-Product decisions and safety boundaries are documented in [`PLAN.md`](./PLAN.md).
-
-## Deployment
-
-GitHub Actions exports the app with the `/questmark` base path, verifies the exported PWA offline, and deploys `out/` to GitHub Pages.
+Product decisions, safety boundaries, and deliberate non-goals live in [`PLAN.md`](./PLAN.md).
